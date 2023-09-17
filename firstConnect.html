@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz App</title>
+</head>
+<body>
+    <h1>Quiz</h1>
+    <div id="quiz-container">
+        <p id="question"></p>
+        <ul id="options">
+        </ul>
+        <button id="check-answer">Check Answer</button>
+    </div>
+    <p>Current Users: <span id="current-users">0</span></p>
+
+    <script>
+        let currentQuestion = 0;
+        let currentUsers = 0;
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const checkAnswerButton = document.getElementById('check-answer');
+        const currentUsersElement = document.getElementById('current-users');
+
+        function getQuiz() {
+            fetch('/quiz')
+                .then(response => response.json())
+                .then(data => {
+                    questionElement.innerText = data.question;
+                    optionsElement.innerHTML = "";
+                    data.options.forEach(option => {
+                        const li = document.createElement('li');
+                        li.innerText = option;
+                        optionsElement.appendChild(li);
+                    });
+                    currentUsers = data.current_users;
+                    currentUsersElement.innerText = currentUsers;
+                });
+        }
+
+        function checkAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (!selectedOption) {
+                alert('Please select an answer.');
+                return;
+            }
+
+            const answer = selectedOption.value;
+            fetch('/check_answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ answer })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_correct) {
+                    alert('Correct!');
+                } else {
+                    alert('Incorrect. Try again.');
+                }
+                getQuiz();
+            });
+        }
+
+        checkAnswerButton.addEventListener('click', checkAnswer);
+
+        getQuiz();
+    </script>
+</body>
+</html>
